@@ -1,0 +1,27 @@
+{
+  "name": "filterly",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "dev:poll": "tsx watch worker/pollLocal.ts",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^2.6.5",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "@microsoft/microsoft-graph-types": "^2.43.1",
+    "@vercel/kv": "^2.0.0",
+    "dotenv": "^17.2.3",
+    "next": "^15.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.6.3"
+  }
+}
