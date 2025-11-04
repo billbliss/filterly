@@ -97,3 +97,4 @@ Thumbs.db
 # Google service credentials
 config/*.json
 config/*.base64
+.vercel
