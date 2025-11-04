@@ -1,5 +1,6 @@
 // app/api/auth/logout/route.ts
 import { NextResponse } from "next/server";
+
 import { msalApp } from "@/lib/msal";
 
 export async function GET(request: Request) {
@@ -13,11 +14,11 @@ export async function GET(request: Request) {
   }
 
   // 2) Redirect to Microsoft logout with a return URL to your app
-  const origin = new URL(request.url).origin;
+  const { origin } = new URL(request.url);
   const tenant = process.env.TENANT_ID || "common";
   const postLogout = `${origin}/`; // or `${origin}/logged-out` if you have a page
   const msLogout = new URL(
-    `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/logout`
+    `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/logout`,
   );
   msLogout.searchParams.set("post_logout_redirect_uri", postLogout);
 

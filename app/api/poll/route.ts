@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server';
-import { pollInboxDelta } from '@/lib/delta';
-export const runtime = 'nodejs';
+import { NextResponse } from "next/server";
+
+import { pollInboxDelta } from "@/lib/delta";
+
+export const runtime = "nodejs";
 export async function GET() {
   try {
     await pollInboxDelta();

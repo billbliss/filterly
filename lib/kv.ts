@@ -18,7 +18,10 @@ const remoteConfigured = Boolean(url && url.startsWith("https") && token);
   if (!remoteConfigured) return; // stay in local mode
   try {
     const { createClient } = await import("@vercel/kv");
-    client = createClient({ url: url as string, token: token as string }) as unknown as KVClient;
+    client = createClient({
+      url: url as string,
+      token: token as string,
+    }) as unknown as KVClient;
     await client.ping?.().catch(() => {});
   } catch {
     client = null; // fall back silently if SDK missing or config invalid
@@ -29,7 +32,7 @@ export async function kvGet<T = unknown>(key: string): Promise<T | null> {
   if (client) {
     return (await client.get<T>(key)) ?? null;
   }
-  return (mem.has(key) ? (mem.get(key) as T) : null);
+  return mem.has(key) ? (mem.get(key) as T) : null;
 }
 
 export async function kvSet<T = unknown>(key: string, val: T): Promise<void> {

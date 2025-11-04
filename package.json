@@ -7,7 +7,10 @@
     "dev": "next dev",
     "dev:poll": "tsx watch worker/pollLocal.ts",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@azure/msal-node": "^2.6.5",
@@ -21,7 +24,20 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^18.0.0",
+    "eslint-config-next": "^15.5.6",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "prettier": "^3.6.2",
     "tsx": "^4.20.6",
-    "typescript": "^5.6.3"
+    "typescript": "5.5.4"
+  },
+  "engines": {
+    "node": ">=18.18 <23"
   }
 }

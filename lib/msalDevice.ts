@@ -1,4 +1,8 @@
-import { PublicClientApplication, type DeviceCodeRequest } from "@azure/msal-node";
+/* eslint-disable no-console */
+import {
+  type DeviceCodeRequest,
+  PublicClientApplication,
+} from "@azure/msal-node";
 
 const pca = new PublicClientApplication({
   auth: {
