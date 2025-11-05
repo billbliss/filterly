@@ -5,6 +5,13 @@ import { pollInboxDelta } from "@/lib/delta";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic"; // ensure no caching
 
+type PollDeltaResult = {
+  count?: number;
+  since?: string | null;
+  until?: string | null;
+  mailbox?: string | null;
+};
+
 export async function POST(req: NextRequest) {
   const token = req.headers.get("x-cron-token");
   if (!token || token !== process.env.CRON_TOKEN) {
@@ -15,8 +22,22 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await pollInboxDelta();
-    return NextResponse.json({ ok: true });
+    // Run your actual poll
+    const result = (await pollInboxDelta()) as PollDeltaResult | undefined;
+
+    // Build and log a useful summary
+    const summary = {
+      ok: true,
+      fetched: result?.count ?? 0,
+      since: result?.since ?? null,
+      until: result?.until ?? null,
+      mailbox: result?.mailbox ?? "unknown",
+      timestamp: new Date().toISOString(),
+    };
+    console.log("[poll]", JSON.stringify(summary));
+
+    // Return it in the HTTP response too
+    return NextResponse.json(summary);
   } catch (e: unknown) {
     let message: string;
     if (e instanceof Error) {

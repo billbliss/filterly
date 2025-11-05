@@ -72,7 +72,7 @@ sudo systemctl start filterly-poller.service
 sudo systemctl status filterly-poller.service
 
 # Follow logs
-journalctl -u filterly-poller.service -f
+sudo journalctl -u filterly-poller.service -f
 ```
 
 Successful run log:
