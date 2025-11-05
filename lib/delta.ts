@@ -91,13 +91,26 @@ export async function pollInboxDelta() {
     state = loadDeltaState(stateKey) || {};
   }
 
+  console.log(
+    "[delta:load]",
+    stateKey,
+    state?.deltaLink ? "delta=✔" : "delta=∅",
+    state?.nextLink ? "next=✔" : "next=∅",
+  );
+
   logLine({ event: "delta:start", appOnly, root, state });
   let processed = 0;
 
-  let url =
-    state.deltaLink ||
-    state.nextLink ||
-    `${root}/mailFolders('Inbox')/messages/delta?$select=id,receivedDateTime,subject,from,internetMessageId,inferenceClassification,categories,conversationId,parentFolderId`;
+  const TIME_BUDGET_MS = process.env.FAST_BASELINE === "1" ? 60000 : 20000;
+  const begin = Date.now();
+
+  const PAGE_TOP = 500; // larger page size to accelerate baseline
+  const startUrl = `${root}/mailFolders('Inbox')/messages/delta?$select=id,receivedDateTime,subject,from,internetMessageId,inferenceClassification,categories,conversationId,parentFolderId&$top=${PAGE_TOP}`;
+  let url = state.nextLink || state.deltaLink || startUrl;
+  console.log(
+    "[delta:init]",
+    url.startsWith("http") ? `${url.slice(0, 120)}…` : url,
+  );
 
   let pageGuard = 0;
   while (url) {
@@ -124,21 +137,36 @@ export async function pollInboxDelta() {
     }
 
     if (res["@odata.nextLink"]) {
+      // Save nextLink for continuation
       url = res["@odata.nextLink"];
-      state.nextLink = url;
+      state = { nextLink: url };
       if (process.env.NODE_ENV === "production") {
         await kvSet(stateKey, state);
       } else {
         saveDeltaState(stateKey, state);
       }
+      console.log("[delta:save]", stateKey, `next=${url.slice(0, 100)}…`);
+
+      // Optional time budget guard: yield and exit if over budget
+      if (Date.now() - begin > TIME_BUDGET_MS) {
+        console.log(
+          "[delta:yield] time budget used; saved nextLink and exiting",
+        );
+        break;
+      }
+
+      // eslint-disable-next-line no-continue
+      continue;
     } else if (res["@odata.deltaLink"]) {
-      url = undefined as any;
+      // Completed paging — save deltaLink
       state = { deltaLink: res["@odata.deltaLink"] };
       if (process.env.NODE_ENV === "production") {
         await kvSet(stateKey, state);
       } else {
         saveDeltaState(stateKey, state);
       }
+      console.log("[delta:complete] saved deltaLink");
+      break;
     } else {
       url = undefined as any;
     }
