@@ -1,6 +1,7 @@
 import { appendFileSync, mkdirSync } from "fs";
 import { join } from "path";
 
+import { loadDeltaState, saveDeltaState } from "./devDeltaStore";
 import { graphClient } from "./graph";
 import { kvGet, kvSet } from "./kv";
 import { getAccessToken } from "./msal";
@@ -58,14 +59,20 @@ export async function pollInboxDelta() {
 
   // Use different delta checkpoints for app-only vs delegated (and per UPN)
   const stateKey = appOnly ? `${DELTA_KEY}:users:${upn}` : `${DELTA_KEY}:me`;
-  let state: DeltaState = (await kvGet<DeltaState>(stateKey)) || {};
+  let state: DeltaState = {};
+  if (process.env.NODE_ENV === "production") {
+    state = (await kvGet<DeltaState>(stateKey)) || {};
+  } else {
+    state = loadDeltaState(stateKey) || {};
+  }
+
+  logLine({ event: "delta:start", appOnly, root, state });
+  let processed = 0;
 
   let url =
     state.deltaLink ||
     state.nextLink ||
     `${root}/mailFolders('Inbox')/messages/delta?$select=id,receivedDateTime,subject,from,internetMessageId,inferenceClassification,categories,conversationId,parentFolderId`;
-
-  logLine({ event: "delta:start", appOnly, root, state });
 
   let pageGuard = 0;
   while (url) {
@@ -87,17 +94,26 @@ export async function pollInboxDelta() {
         };
         console.log(JSON.stringify(rec));
         logLine(rec);
+        processed++;
       }
     }
 
     if (res["@odata.nextLink"]) {
       url = res["@odata.nextLink"];
       state.nextLink = url;
-      await kvSet(stateKey, state);
+      if (process.env.NODE_ENV === "production") {
+        await kvSet(stateKey, state);
+      } else {
+        saveDeltaState(stateKey, state);
+      }
     } else if (res["@odata.deltaLink"]) {
       url = undefined as any;
       state = { deltaLink: res["@odata.deltaLink"] };
-      await kvSet(stateKey, state);
+      if (process.env.NODE_ENV === "production") {
+        await kvSet(stateKey, state);
+      } else {
+        saveDeltaState(stateKey, state);
+      }
     } else {
       url = undefined as any;
     }
@@ -106,4 +122,11 @@ export async function pollInboxDelta() {
   }
 
   logLine({ event: "delta:done", appOnly, state });
+
+  return {
+    count: processed,
+    since: state?.deltaLink || state?.nextLink || null,
+    until: new Date().toISOString(),
+    mailbox: appOnly ? (upn ?? null) : "me",
+  };
 }
