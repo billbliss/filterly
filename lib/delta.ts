@@ -32,7 +32,7 @@ type DeltaState = { nextLink?: string; deltaLink?: string };
 function isAppOnlyToken(jwt: string): boolean {
   try {
     const payload = JSON.parse(
-      Buffer.from(jwt.split(".")[1], "base64").toString("utf8")
+      Buffer.from(jwt.split(".")[1], "base64").toString("utf8"),
     );
     return !!payload.roles && !payload.scp;
   } catch {
