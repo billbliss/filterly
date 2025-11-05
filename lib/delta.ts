@@ -41,24 +41,49 @@ function isAppOnlyToken(jwt: string): boolean {
   }
 }
 
+function decodeUpnLike(jwt: string): string | null {
+  try {
+    const payload = JSON.parse(
+      Buffer.from(jwt.split(".")[1], "base64").toString("utf8"),
+    );
+    return (
+      payload.upn ||
+      payload.preferred_username ||
+      payload.unique_name ||
+      payload.email ||
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
 export async function pollInboxDelta() {
   // Decide mailbox root based on token type
   const accessToken = await getAccessToken();
   const appOnly = isAppOnlyToken(accessToken);
-  const upn = process.env.MAILBOX_UPN;
+  const tokenUpn = decodeUpnLike(accessToken);
+  // Allow MAILBOX_UPN to override in all cases; required for app-only
+  const resolvedUpn =
+    process.env.MAILBOX_UPN || (!appOnly ? tokenUpn || null : null);
 
   const root = appOnly
     ? (() => {
-        if (!upn)
-          throw new Error("MAILBOX_UPN is required for app-only tokens");
-        return `/users('${upn}')`;
+        const explicit = process.env.MAILBOX_UPN || resolvedUpn;
+        if (!explicit)
+          throw new Error(
+            "MAILBOX_UPN is required for app-only tokens (no user in token); set MAILBOX_UPN to the target mailbox UPN",
+          );
+        return `/users('${explicit}')`;
       })()
     : `/me`;
 
   const client = await graphClient();
 
   // Use different delta checkpoints for app-only vs delegated (and per UPN)
-  const stateKey = appOnly ? `${DELTA_KEY}:users:${upn}` : `${DELTA_KEY}:me`;
+  const stateKey = appOnly
+    ? `${DELTA_KEY}:users:${resolvedUpn ?? "unknown"}`
+    : `${DELTA_KEY}:me`;
   let state: DeltaState = {};
   if (process.env.NODE_ENV === "production") {
     state = (await kvGet<DeltaState>(stateKey)) || {};
@@ -127,6 +152,6 @@ export async function pollInboxDelta() {
     count: processed,
     since: state?.deltaLink || state?.nextLink || null,
     until: new Date().toISOString(),
-    mailbox: appOnly ? (upn ?? null) : "me",
+    mailbox: appOnly ? (resolvedUpn ?? null) : resolvedUpn || "me",
   };
 }
