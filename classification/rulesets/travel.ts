@@ -20,13 +20,24 @@ const travelPhrases = {
   car: [/\bcar (rental|hire)\b/i, /\bpickup\b/i, /\bdrop[- ]off\b/i],
 };
 
+const travelSenderDomains = [
+  "t.delta.com",
+  "delta.com",
+  "alaskaair.com",
+  "aa.com",
+  "united.com",
+  "southwest.com",
+  "jetblue.com",
+  "american-airlines.com",
+];
+
 export const travelRuleset: RuleSet = {
   label: "Travel",
   threshold: 0.7,
   rules: [
     {
       id: "travel/airline-hosts",
-      weight: 0.35,
+      weight: 0.3,
       when: [
         {
           op: "linkHostIn",
@@ -45,6 +56,11 @@ export const travelRuleset: RuleSet = {
           ],
         },
       ],
+    },
+    {
+      id: "travel/from-domains",
+      weight: 0.35,
+      when: [{ op: "fromDomainIn", any: travelSenderDomains }],
     },
     {
       id: "travel/flight-phrases",

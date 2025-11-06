@@ -18,14 +18,42 @@ const financePhrases = {
     /\bdue date\b/i,
     /\bautopay\b/i,
     /\btransaction alert\b/i,
+    /\bzelle\b/i,
+    /\bpayment (?:has been |was )?(?:deposited|sent|received)\b/i,
+    /\brecurring payment\b/i,
+    /\bvote[- ]now\b/i,
+    /\bproxy vote\b/i,
   ],
   orderShip: [
     /\b(order|shipment|shipping|delivery|tracking)\b/i,
     /\bout for delivery\b/i,
     /\barriving\b/i,
     /\bdelivered\b/i,
+    /\binvoice\b/i,
+    /\border confirmation\b/i,
   ],
 };
+
+const financeSenderDomains = [
+  "notifications.usbank.com",
+  "customercenter.net",
+  "venmo.com",
+  "billing.garmin.com",
+  "shareholderdocs.fidelity.com",
+  "proxyvote.com",
+  "getinvoicesimple.com",
+  "desertluxuryconcierge.com",
+  "wi-q.com",
+];
+
+const orderSenderDomains = [
+  "amazon.com",
+  "orders.wi-q.com",
+  "zappos.com",
+  "uber.com",
+  "getinvoicesimple.com",
+  "desertluxuryconcierge.com",
+];
 
 export const receiptsRuleset: RuleSet = {
   label: "Receipts",
@@ -69,8 +97,13 @@ export const financeRuleset: RuleSet = {
   rules: [
     {
       id: "finance/statement",
-      weight: 0.4,
+      weight: 0.35,
       when: [{ op: "textMatch", any: financePhrases.statement, scope: "both" }],
+    },
+    {
+      id: "finance/from-domains",
+      weight: 0.35,
+      when: [{ op: "fromDomainIn", any: financeSenderDomains }],
     },
     {
       id: "finance/pdf-attach",
@@ -97,7 +130,7 @@ export const financeRuleset: RuleSet = {
     },
     {
       id: "finance/unsubscribe-or-listid",
-      weight: 0.15,
+      weight: 0.1,
       when: [
         { op: "flagTrue", key: "hasUnsubscribe" },
         { op: "flagTrue", key: "hasListId" },
@@ -130,6 +163,11 @@ export const ordersShippingRuleset: RuleSet = {
           ],
         },
       ],
+    },
+    {
+      id: "orders/from-domains",
+      weight: 0.25,
+      when: [{ op: "fromDomainIn", any: orderSenderDomains }],
     },
     {
       id: "orders/tracking-regex",

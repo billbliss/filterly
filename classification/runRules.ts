@@ -1,5 +1,6 @@
 // classification/runRules.ts
 import { runRuleSet } from "./engine";
+import { actionRequiredRuleset } from "./rulesets/action";
 import { conversationRuleset } from "./rulesets/conversation";
 import {
   financeRuleset,
@@ -20,6 +21,7 @@ import { DetectionResult, MessageFeatures, RuleSet } from "./types";
 const RULESETS: RuleSet[] = [
   // Personal / Conversations
   conversationRuleset,
+  actionRequiredRuleset,
   premiumNewslettersRuleset,
   // Finance / Money & Orders
   receiptsRuleset,

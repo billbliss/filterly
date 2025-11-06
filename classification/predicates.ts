@@ -7,6 +7,11 @@ export const phrases = {
     /\bsplit a donation\b/i,
     /\brush \$?\d+/i,
     /\bend[- ]of[- ](month|quarter|year)\b/i,
+    /\bpetition\b/i,
+    /\bsign (?:the )?petition\b/i,
+    /\bvote[- ]by[- ]mail\b/i,
+    /\bballot\b/i,
+    /\bdefeat (?:maga|trump)\b/i,
   ],
   politicalFooter: [/\bpaid for by\b/i, /\bFEC\b/i],
   phishingUrgency: [
