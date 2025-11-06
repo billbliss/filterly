@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   try {
     await acquireTokenByCode(code);
     return new NextResponse(
-      "Signed in! Polling is ready. You can close this tab."
+      "Signed in! Polling is ready. You can close this tab.",
     );
   } catch (e: any) {
     return new NextResponse(`Auth error: ${e.message}`, { status: 500 });

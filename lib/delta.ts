@@ -1,9 +1,16 @@
 import { appendFileSync, mkdirSync } from "fs";
 import { join } from "path";
 
+import { classify } from "@/classification/classify.js";
+import { extractMessageFeatures } from "@/classification/fromGraph.js";
+
 import { loadDeltaState, saveDeltaState } from "./devDeltaStore";
 import { graphClient } from "./graph";
+import { fetchMessageDetails } from "./graphMessages.js";
 import { kvGet, kvSet } from "./kv";
+import { resolveMailboxContext } from "./mailbox.js";
+import { isMoveEnabled, moveMessageToFolder } from "./mailFolders.js";
+import { applyCategoriesToMessage } from "./messageCategories.js";
 import { getAccessToken } from "./msal";
 
 // --- simple JSONL logger for classification inspection ---
@@ -29,54 +36,11 @@ function logLine(record: unknown) {
 // Base key for delta state
 const DELTA_KEY = "graph:inbox:deltaState";
 type DeltaState = { nextLink?: string; deltaLink?: string };
-
-function isAppOnlyToken(jwt: string): boolean {
-  try {
-    const payload = JSON.parse(
-      Buffer.from(jwt.split(".")[1], "base64").toString("utf8"),
-    );
-    return !!payload.roles && !payload.scp;
-  } catch {
-    return false;
-  }
-}
-
-function decodeUpnLike(jwt: string): string | null {
-  try {
-    const payload = JSON.parse(
-      Buffer.from(jwt.split(".")[1], "base64").toString("utf8"),
-    );
-    return (
-      payload.upn ||
-      payload.preferred_username ||
-      payload.unique_name ||
-      payload.email ||
-      null
-    );
-  } catch {
-    return null;
-  }
-}
-
 export async function pollInboxDelta() {
   // Decide mailbox root based on token type
   const accessToken = await getAccessToken();
-  const appOnly = isAppOnlyToken(accessToken);
-  const tokenUpn = decodeUpnLike(accessToken);
-  // Allow MAILBOX_UPN to override in all cases; required for app-only
-  const resolvedUpn =
-    process.env.MAILBOX_UPN || (!appOnly ? tokenUpn || null : null);
-
-  const root = appOnly
-    ? (() => {
-        const explicit = process.env.MAILBOX_UPN || resolvedUpn;
-        if (!explicit)
-          throw new Error(
-            "MAILBOX_UPN is required for app-only tokens (no user in token); set MAILBOX_UPN to the target mailbox UPN",
-          );
-        return `/users('${explicit}')`;
-      })()
-    : `/me`;
+  const { appOnly, resolvedUpn, root, mailboxAddresses } =
+    resolveMailboxContext(accessToken);
 
   const client = await graphClient();
 
@@ -118,21 +82,148 @@ export async function pollInboxDelta() {
 
     if (Array.isArray(res.value) && res.value.length) {
       for (const m of res.value) {
-        const rec = {
-          event: "message",
-          id: m.id,
-          receivedDateTime: m.receivedDateTime,
-          subject: m.subject,
-          from: m.from,
-          internetMessageId: m.internetMessageId,
-          inferenceClassification: m.inferenceClassification,
-          categories: m.categories,
-          conversationId: m.conversationId,
-          parentFolderId: m.parentFolderId,
-        };
-        console.log(JSON.stringify(rec));
-        logLine(rec);
-        processed++;
+        if (m["@removed"]) {
+          logLine({
+            event: "message:removed",
+            id: m.id,
+            reason: m["@removed"]?.reason,
+          });
+        } else if (m.id) {
+          const rec = {
+            event: "message",
+            id: m.id,
+            receivedDateTime: m.receivedDateTime,
+            subject: m.subject,
+            from: m.from,
+            internetMessageId: m.internetMessageId,
+            inferenceClassification: m.inferenceClassification,
+            categories: m.categories,
+            conversationId: m.conversationId,
+            parentFolderId: m.parentFolderId,
+          };
+          try {
+            const full = await fetchMessageDetails(client, root, m.id);
+            const features = extractMessageFeatures(full, {
+              mailboxAddresses,
+            });
+            const classification = classify(features);
+            const top = classification.results[0];
+            const enriched = {
+              ...rec,
+              classification: {
+                primaryLabel: classification.primaryLabel,
+                primaryFolder: classification.primaryFolder,
+                results: classification.results,
+              },
+            };
+            console.log(JSON.stringify(enriched));
+            logLine(enriched);
+            console.log(
+              "[classify]",
+              JSON.stringify({
+                id: m.id,
+                subject: rec.subject,
+                primary: classification.primaryLabel,
+                confidence: top?.confidence ?? 0,
+                folder: classification.primaryFolder,
+              }),
+            );
+            try {
+              const categoryResult = await applyCategoriesToMessage(
+                client,
+                root,
+                m.id,
+                Array.isArray(full.categories)
+                  ? (full.categories as string[])
+                  : (m.categories as string[] | undefined),
+                classification,
+              );
+              if (
+                categoryResult?.changed ||
+                categoryResult?.applied === false
+              ) {
+                logLine({
+                  event: "classify:categories",
+                  id: m.id,
+                  categories: categoryResult.categories,
+                  previous: categoryResult.previous,
+                  applied: categoryResult.applied,
+                });
+                console.log(
+                  "[classify:categories]",
+                  JSON.stringify({
+                    id: m.id,
+                    categories: categoryResult.categories,
+                    previous: categoryResult.previous,
+                    applied: categoryResult.applied,
+                  }),
+                );
+              }
+            } catch (catErr) {
+              const categoryError =
+                catErr instanceof Error ? catErr.message : String(catErr);
+              logLine({
+                event: "classify:categories:error",
+                id: m.id,
+                error: categoryError,
+              });
+              console.error("[classify:categories:error]", m.id, categoryError);
+            }
+            try {
+              const moveResult = await moveMessageToFolder(
+                client,
+                root,
+                m.id,
+                full.parentFolderId,
+                classification.primaryFolder,
+              );
+              if (
+                moveResult.action !== "already" &&
+                moveResult.action !== "no-target"
+              ) {
+                logLine({
+                  event: "classify:move",
+                  id: m.id,
+                  subject: m.subject,
+                  action: moveResult.action,
+                  targetFolder: moveResult.targetFolderName,
+                  targetFolderId: moveResult.targetFolderId,
+                  moveEnabled: isMoveEnabled(),
+                });
+                console.log(
+                  "[classify:move]",
+                  JSON.stringify({
+                    id: m.id,
+                    action: moveResult.action,
+                    targetFolder: moveResult.targetFolderName,
+                    enabled: isMoveEnabled(),
+                  }),
+                );
+              }
+            } catch (moveErr) {
+              const moveError =
+                moveErr instanceof Error ? moveErr.message : String(moveErr);
+              logLine({
+                event: "classify:move:error",
+                id: m.id,
+                error: moveError,
+              });
+              console.error("[classify:move:error]", m.id, moveError);
+            }
+          } catch (err) {
+            const errorMessage =
+              err instanceof Error ? err.message : String(err);
+            console.error("[classify:error]", m.id, errorMessage);
+            logLine({
+              event: "classify:error",
+              id: m.id,
+              subject: m.subject,
+              error: errorMessage,
+            });
+          } finally {
+            processed++;
+          }
+        }
       }
     }
 
