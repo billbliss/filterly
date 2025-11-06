@@ -1,16 +1,16 @@
 import { appendFileSync, mkdirSync } from "fs";
 import { join } from "path";
 
-import { classify } from "@/classification/classify.js";
-import { extractMessageFeatures } from "@/classification/fromGraph.js";
+import { classify } from "@/classification/classify";
+import { extractMessageFeatures } from "@/classification/fromGraph";
 
 import { loadDeltaState, saveDeltaState } from "./devDeltaStore";
 import { graphClient } from "./graph";
-import { fetchMessageDetails } from "./graphMessages.js";
+import { fetchMessageDetails } from "./graphMessages";
 import { kvGet, kvSet } from "./kv";
-import { resolveMailboxContext } from "./mailbox.js";
-import { isMoveEnabled, moveMessageToFolder } from "./mailFolders.js";
-import { applyCategoriesToMessage } from "./messageCategories.js";
+import { resolveMailboxContext } from "./mailbox";
+import { isMoveEnabled, moveMessageToFolder } from "./mailFolders";
+import { applyCategoriesToMessage } from "./messageCategories";
 import { getAccessToken } from "./msal";
 
 // --- simple JSONL logger for classification inspection ---
