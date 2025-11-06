@@ -1,6 +1,6 @@
 // classification/rulesets/political.ts
-import { phrases } from "../predicates.js";
-import { RuleSet } from "../types.js";
+import { phrases } from "../predicates";
+import { RuleSet } from "../types";
 
 export const politicalRuleset: RuleSet = {
   label: "PoliticalSolicitation",

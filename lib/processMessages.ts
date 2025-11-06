@@ -1,11 +1,11 @@
 // lib/processMessages.ts
-import { classify } from "@/classification/classify.js";
-import { extractMessageFeatures } from "@/classification/fromGraph.js";
+import { classify } from "@/classification/classify";
+import { extractMessageFeatures } from "@/classification/fromGraph";
 
-import { graphClient } from "./graph.js";
-import { fetchMessageDetails } from "./graphMessages.js";
-import { isMoveEnabled, moveMessageToFolder } from "./mailFolders.js";
-import { applyCategoriesToMessage } from "./messageCategories.js";
+import { graphClient } from "./graph";
+import { fetchMessageDetails } from "./graphMessages";
+import { isMoveEnabled, moveMessageToFolder } from "./mailFolders";
+import { applyCategoriesToMessage } from "./messageCategories";
 
 type RetroOptions = {
   root: string;

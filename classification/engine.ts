@@ -6,7 +6,7 @@ import {
   Operand,
   RuleItem,
   RuleSet,
-} from "./types.js";
+} from "./types";
 
 const getHost = (url?: string) => {
   try {

@@ -1,5 +1,5 @@
 // lib/graphMessages.ts
-import { graphClient } from "./graph.js";
+import { graphClient } from "./graph";
 
 type GraphClient = Awaited<ReturnType<typeof graphClient>>;
 

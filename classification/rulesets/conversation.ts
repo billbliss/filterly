@@ -1,5 +1,5 @@
 // classification/rulesets/conversation.ts
-import { RuleSet } from "../types.js";
+import { RuleSet } from "../types";
 
 export const conversationRuleset: RuleSet = {
   label: "ReplyRequested",

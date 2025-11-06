@@ -1,5 +1,5 @@
 // classification/rulesets/finance.ts
-import { RuleSet } from "../types.js";
+import { RuleSet } from "../types";
 
 const financePhrases = {
   receipt: [

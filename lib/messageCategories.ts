@@ -1,7 +1,7 @@
 // lib/messageCategories.ts
-import { type Classified } from "@/classification/classify.js";
+import { type Classified } from "@/classification/classify";
 
-import { graphClient } from "./graph.js";
+import { graphClient } from "./graph";
 
 const APPLY_CATEGORIES = process.env.APPLY_CATEGORIES !== "0";
 const CATEGORY_PREFIX = process.env.CATEGORY_PREFIX || "Filterly";

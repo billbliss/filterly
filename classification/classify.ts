@@ -1,7 +1,7 @@
 // classification/classify.ts
-import { mapToFolder } from "./folderMap.js";
-import { classifyByRules } from "./runRules.js";
-import { MessageFeatures } from "./types.js";
+import { mapToFolder } from "./folderMap";
+import { classifyByRules } from "./runRules";
+import { MessageFeatures } from "./types";
 
 // Labels that are "auxiliary" badges rather than primary destinations.
 // (You can keep or tweak this as your taxonomy evolves.)

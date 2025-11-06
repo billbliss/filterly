@@ -1,5 +1,5 @@
 // lib/mailFolders.ts
-import { graphClient } from "./graph.js";
+import { graphClient } from "./graph";
 
 const MOVE_ENABLED =
   typeof process.env.MOVE_ENABLED === "string" &&

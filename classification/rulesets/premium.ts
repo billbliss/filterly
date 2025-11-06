@@ -1,5 +1,5 @@
 // classification/rulesets/premium.ts
-import { RuleSet } from "../types.js";
+import { RuleSet } from "../types";
 
 const premiumNewsletterDomains = [
   "puck.news",

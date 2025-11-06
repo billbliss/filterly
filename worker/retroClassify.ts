@@ -4,9 +4,9 @@ import "dotenv/config";
 import { appendFileSync, mkdirSync } from "fs";
 import { dirname } from "path";
 
-import { resolveMailboxContext } from "@/lib/mailbox.js";
-import { getAccessToken } from "@/lib/msal.js";
-import { processMessagesInRange } from "@/lib/processMessages.js";
+import { resolveMailboxContext } from "@/lib/mailbox";
+import { getAccessToken } from "@/lib/msal";
+import { processMessagesInRange } from "@/lib/processMessages";
 
 type CliOptions = {
   days?: number;

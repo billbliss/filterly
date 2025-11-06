@@ -6,7 +6,7 @@ import type {
   Message,
 } from "@microsoft/microsoft-graph-types";
 
-import type { MessageFeatures } from "./types.js";
+import type { MessageFeatures } from "./types";
 
 type GraphMessageForFeatures = Message & {
   internetMessageHeaders?: InternetMessageHeader[] | undefined;
