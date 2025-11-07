@@ -7,9 +7,9 @@ const folderMap: Record<string, string> = {
   Receipts: "Money & Orders",
   Travel: "Travel & Calendar",
   CalendarItinerary: "Travel & Calendar",
-  Promotions: "Updates & Marketing",
-  Newsletters: "Updates & Marketing",
-  Updates: "Updates & Marketing",
+  Promotions: "Updates & Offers",
+  Newsletters: "Updates & Offers",
+  Updates: "Updates & Offers",
   PremiumNewsletters: "Premium Newsletters",
   ActionRequired: "Action",
   ApprovePay: "Action",
@@ -17,4 +17,4 @@ const folderMap: Record<string, string> = {
 };
 
 export const mapToFolder = (label: string) =>
-  folderMap[label] ?? "Updates & Marketing";
+  folderMap[label] ?? "Updates & Offers";

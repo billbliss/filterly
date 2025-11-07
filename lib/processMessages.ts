@@ -1,6 +1,7 @@
 // lib/processMessages.ts
 import { classify } from "@/classification/classify";
 import { extractMessageFeatures } from "@/classification/fromGraph";
+import { shouldMoveFromInbox } from "@/classification/movePolicy";
 
 import { graphClient } from "./graph";
 import { fetchMessageDetails } from "./graphMessages";
@@ -127,39 +128,61 @@ export async function processMessagesInRange(options: RetroOptions) {
             });
           }
 
-          try {
-            const moveResult = await moveMessageToFolder(
-              client,
-              root,
-              summary.id,
-              (full.parentFolderId as string | undefined) ??
-                (summary.parentFolderId as string | undefined),
-              result.primaryFolder,
-              { dryRun },
-            );
-            if (
-              moveResult.action !== "already" &&
-              moveResult.action !== "no-target"
-            ) {
+          const primaryConfidence =
+            result.results.find((r) => r.label === result.primaryLabel)
+              ?.confidence ?? 0;
+
+          if (
+            result.primaryFolder &&
+            shouldMoveFromInbox({
+              primaryLabel: result.primaryLabel,
+              confidence: primaryConfidence,
+            })
+          ) {
+            try {
+              const moveResult = await moveMessageToFolder(
+                client,
+                root,
+                summary.id,
+                (full.parentFolderId as string | undefined) ??
+                  (summary.parentFolderId as string | undefined),
+                result.primaryFolder,
+                { dryRun },
+              );
+              if (
+                moveResult.action !== "already" &&
+                moveResult.action !== "no-target"
+              ) {
+                log({
+                  event: "retro:move",
+                  id: summary.id,
+                  subject: safeSubject,
+                  sender: safeSender,
+                  action: moveResult.action,
+                  targetFolder: moveResult.targetFolderName,
+                  targetFolderId: moveResult.targetFolderId,
+                  moveEnabled: isMoveEnabled(),
+                });
+              }
+            } catch (moveErr) {
               log({
-                event: "retro:move",
+                event: "retro:move:error",
                 id: summary.id,
                 subject: safeSubject,
                 sender: safeSender,
-                action: moveResult.action,
-                targetFolder: moveResult.targetFolderName,
-                targetFolderId: moveResult.targetFolderId,
-                moveEnabled: isMoveEnabled(),
+                error:
+                  moveErr instanceof Error ? moveErr.message : String(moveErr),
               });
             }
-          } catch (moveErr) {
+          } else {
             log({
-              event: "retro:move:error",
+              event: "retro:move:skipped",
               id: summary.id,
               subject: safeSubject,
               sender: safeSender,
-              error:
-                moveErr instanceof Error ? moveErr.message : String(moveErr),
+              reason: "policy",
+              primaryLabel: result.primaryLabel,
+              confidence: primaryConfidence,
             });
           }
         } catch (err) {
