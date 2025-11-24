@@ -224,8 +224,17 @@ export async function auditMisfiledMessages(options: AuditMisfiledOptions) {
         Boolean(expectedNormalized) &&
         expectedNormalized !== actualNormalized &&
         (!parentId || parentId === folder.id);
+      const shouldIgnoreKnownOverlap =
+        expectedNormalized === "updates & marketing" &&
+        actualNormalized === "updates & offers";
 
-      if (shouldInclude && id && expectedFolder && expectedNormalized) {
+      if (
+        shouldInclude &&
+        !shouldIgnoreKnownOverlap &&
+        id &&
+        expectedFolder &&
+        expectedNormalized
+      ) {
         let classification: MisfiledMessageRecord["classification"];
         if (includeClassification) {
           try {

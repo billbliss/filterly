@@ -128,7 +128,3 @@ export async function moveMessageToFolder(
     targetFolderName: normalizedName,
   };
 }
-
-export function isMoveEnabled() {
-  return MOVE_ENABLED;
-}

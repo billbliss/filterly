@@ -28,7 +28,7 @@ const PRIORITY: Record<string, number> = {
   CalendarItinerary: 70,
   Travel: 68,
   PoliticalSolicitation: 60,
-  Updates: 50,
+  Updates: 70,
   Newsletters: 48,
   Promotions: 46,
   PremiumNewsletters: 55,
@@ -47,6 +47,7 @@ export interface Classified {
     confidence: number;
     folder: string;
     evidence: { rule: string; detail?: string }[];
+    moveEnabled: boolean;
   }>;
 }
 

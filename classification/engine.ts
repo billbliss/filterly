@@ -116,7 +116,12 @@ export function runRuleSet(
   score = Math.min(score, cap);
 
   if (score >= rs.threshold) {
-    return { label: rs.label, confidence: score, evidence };
+    return {
+      label: rs.label,
+      confidence: score,
+      evidence,
+      moveEnabled: Boolean(rs.moveEnabled),
+    };
   }
   return null;
 }

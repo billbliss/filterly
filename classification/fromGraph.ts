@@ -179,6 +179,7 @@ export function extractMessageFeatures(
   const isReplyChain =
     /\bfrom:\s.+@/i.test(bodyCombined) &&
     (/\bsent:\s/i.test(bodyCombined) || /\bwrote:/i.test(bodyCombined));
+  const hasInReplyTo = Boolean(headers["in-reply-to"]);
 
   return {
     id: message.id ?? "",
@@ -193,6 +194,7 @@ export function extractMessageFeatures(
     ),
     mentionsMailbox,
     isReplyChain,
+    hasInReplyTo,
     attachmentKinds: collectAttachmentKinds(message.attachments),
     links: extractLinks(bodyHtml),
     headers,

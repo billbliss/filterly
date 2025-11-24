@@ -7,6 +7,7 @@
     "dev": "next dev",
     "dev:poll": "tsx watch worker/pollLocal.ts",
     "audit:misfiled": "tsx worker/auditMisfiled.ts",
+    "retro": "node --import tsx worker/retroClassify.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",

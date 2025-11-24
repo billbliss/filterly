@@ -31,6 +31,9 @@ const financePhrases = {
     /\bdelivered\b/i,
     /\binvoice\b/i,
     /\border confirmation\b/i,
+    /\buber (?:trip|ride|receipt)\b/i,
+    /\byour (?:morning|afternoon|evening)?\s*trip\b/i,
+    /\bride summary\b/i,
   ],
 };
 
@@ -44,6 +47,8 @@ const financeSenderDomains = [
   "getinvoicesimple.com",
   "desertluxuryconcierge.com",
   "wi-q.com",
+  "icapitalnetwork.com",
+  "paythepoolman.com",
 ];
 
 const orderSenderDomains = [
@@ -93,7 +98,7 @@ export const receiptsRuleset: RuleSet = {
 
 export const financeRuleset: RuleSet = {
   label: "FinanceBilling",
-  threshold: 0.7,
+  threshold: 0.55,
   rules: [
     {
       id: "finance/statement",
@@ -102,17 +107,17 @@ export const financeRuleset: RuleSet = {
     },
     {
       id: "finance/from-domains",
-      weight: 0.35,
+      weight: 0.5,
       when: [{ op: "fromDomainIn", any: financeSenderDomains }],
     },
     {
       id: "finance/pdf-attach",
-      weight: 0.2,
+      weight: 0.15,
       when: [{ op: "attachmentExtIn", any: ["pdf"] }],
     },
     {
       id: "finance/bankish-domains",
-      weight: 0.25,
+      weight: 0.2,
       when: [
         {
           op: "linkHostIn",
@@ -141,7 +146,7 @@ export const financeRuleset: RuleSet = {
 
 export const ordersShippingRuleset: RuleSet = {
   label: "OrdersShipping",
-  threshold: 0.7,
+  threshold: 0.6,
   rules: [
     {
       id: "orders/keywords",
@@ -166,7 +171,7 @@ export const ordersShippingRuleset: RuleSet = {
     },
     {
       id: "orders/from-domains",
-      weight: 0.25,
+      weight: 0.35,
       when: [{ op: "fromDomainIn", any: orderSenderDomains }],
     },
     {

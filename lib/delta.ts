@@ -3,13 +3,14 @@ import { join } from "path";
 
 import { classify } from "@/classification/classify";
 import { extractMessageFeatures } from "@/classification/fromGraph";
+import { shouldMoveFromInbox } from "@/classification/movePolicy";
 
 import { loadDeltaState, saveDeltaState } from "./devDeltaStore";
 import { graphClient } from "./graph";
 import { fetchMessageDetails } from "./graphMessages";
 import { kvGet, kvSet } from "./kv";
 import { resolveMailboxContext } from "./mailbox";
-import { isMoveEnabled, moveMessageToFolder } from "./mailFolders";
+import { moveMessageToFolder } from "./mailFolders";
 import { applyCategoriesToMessage } from "./messageCategories";
 import { getAccessToken } from "./msal";
 
@@ -108,6 +109,11 @@ export async function pollInboxDelta() {
             });
             const classification = classify(features);
             const top = classification.results[0];
+            const primaryResult = classification.results.find(
+              (r) => r.label === classification.primaryLabel,
+            );
+            const primaryConfidence = primaryResult?.confidence ?? 0;
+            const primaryMoveEnabled = primaryResult?.moveEnabled ?? false;
             const enriched = {
               ...rec,
               classification: {
@@ -124,7 +130,7 @@ export async function pollInboxDelta() {
                 id: m.id,
                 subject: rec.subject,
                 primary: classification.primaryLabel,
-                confidence: top?.confidence ?? 0,
+                confidence: primaryConfidence || top?.confidence || 0,
                 folder: classification.primaryFolder,
               }),
             );
@@ -169,46 +175,65 @@ export async function pollInboxDelta() {
               });
               console.error("[classify:categories:error]", m.id, categoryError);
             }
-            try {
-              const moveResult = await moveMessageToFolder(
-                client,
-                root,
-                m.id,
-                full.parentFolderId,
-                classification.primaryFolder,
-              );
-              if (
-                moveResult.action !== "already" &&
-                moveResult.action !== "no-target"
-              ) {
-                logLine({
-                  event: "classify:move",
-                  id: m.id,
-                  subject: m.subject,
-                  action: moveResult.action,
-                  targetFolder: moveResult.targetFolderName,
-                  targetFolderId: moveResult.targetFolderId,
-                  moveEnabled: isMoveEnabled(),
-                });
-                console.log(
-                  "[classify:move]",
-                  JSON.stringify({
+            if (
+              classification.primaryFolder &&
+              shouldMoveFromInbox({
+                primaryLabel: classification.primaryLabel,
+                confidence: primaryConfidence,
+                moveEnabled: primaryMoveEnabled,
+              })
+            ) {
+              try {
+                const moveResult = await moveMessageToFolder(
+                  client,
+                  root,
+                  m.id,
+                  full.parentFolderId,
+                  classification.primaryFolder,
+                );
+                if (
+                  moveResult.action !== "already" &&
+                  moveResult.action !== "no-target"
+                ) {
+                  logLine({
+                    event: "classify:move",
                     id: m.id,
+                    subject: m.subject,
                     action: moveResult.action,
                     targetFolder: moveResult.targetFolderName,
-                    enabled: isMoveEnabled(),
-                  }),
-                );
+                    targetFolderId: moveResult.targetFolderId,
+                    policyMoveEnabled: primaryMoveEnabled,
+                  });
+                  console.log(
+                    "[classify:move]",
+                    JSON.stringify({
+                      id: m.id,
+                      action: moveResult.action,
+                      targetFolder: moveResult.targetFolderName,
+                      policyMoveEnabled: primaryMoveEnabled,
+                    }),
+                  );
+                }
+              } catch (moveErr) {
+                const moveError =
+                  moveErr instanceof Error ? moveErr.message : String(moveErr);
+                logLine({
+                  event: "classify:move:error",
+                  id: m.id,
+                  error: moveError,
+                });
+                console.error("[classify:move:error]", m.id, moveError);
               }
-            } catch (moveErr) {
-              const moveError =
-                moveErr instanceof Error ? moveErr.message : String(moveErr);
+            } else {
               logLine({
-                event: "classify:move:error",
+                event: "classify:move:skipped",
                 id: m.id,
-                error: moveError,
+                subject: m.subject,
+                reason: "policy",
+                primaryLabel: classification.primaryLabel,
+                confidence: primaryConfidence,
+                policyMoveEnabled: primaryMoveEnabled,
               });
-              console.error("[classify:move:error]", m.id, moveError);
             }
           } catch (err) {
             const errorMessage =

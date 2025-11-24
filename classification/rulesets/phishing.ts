@@ -41,5 +41,14 @@ export const phishingRuleset: RuleSet = {
       weight: 0.15,
       when: [{ op: "textMatch", any: phrases.brandSpoof, scope: "both" }],
     },
+    {
+      id: "phish/m365-invite",
+      weight: 0.75,
+      when: [
+        { op: "attachmentExtIn", any: ["ics"] },
+        { op: "textMatch", any: phrases.office365Mention, scope: "both" },
+        { op: "textMatch", any: phrases.office365Urgency, scope: "both" },
+      ],
+    },
   ],
 };

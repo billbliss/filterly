@@ -10,6 +10,7 @@ export interface MessageFeatures {
   hasUnsubscribe?: boolean;
   mentionsMailbox?: boolean;
   isReplyChain?: boolean;
+  hasInReplyTo?: boolean;
   attachmentKinds?: string[]; // ["pdf","ics","html",...]
   links?: { text?: string; href?: string }[];
   headers?: Record<string, string | undefined>;
@@ -25,6 +26,7 @@ export interface DetectionResult {
   label: string;
   confidence: number;
   evidence: DetectionEvidence[];
+  moveEnabled: boolean;
 }
 
 export type Operand =
@@ -55,5 +57,6 @@ export interface RuleSet {
   label: string; // output label if score >= threshold
   threshold: number; // e.g., 0.7
   hardCap?: number; // optional cap, default 1
+  moveEnabled?: boolean; // whether hits from this ruleset allow moving
   rules: RuleItem[];
 }

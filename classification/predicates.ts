@@ -24,4 +24,18 @@ export const phrases = {
   brandSpoof: [
     /\b(microsoft|apple|paypal|bank of america|chase|wells fargo)\b/i,
   ],
+  office365Mention: [
+    /\boffice ?365\b/i,
+    /\bmicrosoft ?365\b/i,
+    /\bmicrosoft subscription\b/i,
+    /\bmicrosoft account\b/i,
+  ],
+  office365Urgency: [
+    /\bavoid (?:service )?interruption\b/i,
+    /\bsubscription payment due\b/i,
+    /\baction required\b/i,
+    /\bresolve (?:account|issue)\b/i,
+    /\breview (?:issue|account|subscription)\b/i,
+    /\bsecurity (?:alert|review)\b/i,
+  ],
 };

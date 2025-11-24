@@ -5,6 +5,8 @@
 This Raspberry Pi script periodically triggers the `POST /api/poll` endpoint on the Filterly Vercel app to run `pollInboxDelta()`.
 It uses a systemd timer (preferred over cron) to run every 10 minutes.
 
+Need to reprocess existing Inbox mail? See [`retro.md`](./retro.md) for the CLI sweep.
+
 ---
 
 ## Components

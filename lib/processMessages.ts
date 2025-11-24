@@ -5,7 +5,7 @@ import { shouldMoveFromInbox } from "@/classification/movePolicy";
 
 import { graphClient } from "./graph";
 import { fetchMessageDetails } from "./graphMessages";
-import { isMoveEnabled, moveMessageToFolder } from "./mailFolders";
+import { moveMessageToFolder } from "./mailFolders";
 import { applyCategoriesToMessage } from "./messageCategories";
 
 type RetroOptions = {
@@ -128,15 +128,18 @@ export async function processMessagesInRange(options: RetroOptions) {
             });
           }
 
-          const primaryConfidence =
-            result.results.find((r) => r.label === result.primaryLabel)
-              ?.confidence ?? 0;
+          const primaryResult = result.results.find(
+            (r) => r.label === result.primaryLabel,
+          );
+          const primaryConfidence = primaryResult?.confidence ?? 0;
+          const primaryMoveEnabled = primaryResult?.moveEnabled ?? false;
 
           if (
             result.primaryFolder &&
             shouldMoveFromInbox({
               primaryLabel: result.primaryLabel,
               confidence: primaryConfidence,
+              moveEnabled: primaryMoveEnabled,
             })
           ) {
             try {
@@ -161,7 +164,7 @@ export async function processMessagesInRange(options: RetroOptions) {
                   action: moveResult.action,
                   targetFolder: moveResult.targetFolderName,
                   targetFolderId: moveResult.targetFolderId,
-                  moveEnabled: isMoveEnabled(),
+                  policyMoveEnabled: primaryMoveEnabled,
                 });
               }
             } catch (moveErr) {
@@ -183,6 +186,7 @@ export async function processMessagesInRange(options: RetroOptions) {
               reason: "policy",
               primaryLabel: result.primaryLabel,
               confidence: primaryConfidence,
+              policyMoveEnabled: primaryMoveEnabled,
             });
           }
         } catch (err) {

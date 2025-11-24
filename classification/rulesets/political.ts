@@ -5,6 +5,10 @@ import { RuleSet } from "../types";
 const politicalSenderDomains = [
   "e.turnoutpac.org",
   "turnoutpac.org",
+  "e.savedemocracypac.com",
+  "savedemocracypac.com",
+  "leftaction.com",
+  "catherinecortezmasto.com",
   "list.moveon.org",
   "moveon.org",
   "shared1.ccsend.com",
@@ -15,6 +19,7 @@ const politicalSenderDomains = [
 export const politicalRuleset: RuleSet = {
   label: "PoliticalSolicitation",
   threshold: 0.6,
+  moveEnabled: true,
   rules: [
     {
       id: "political/from-domains",
