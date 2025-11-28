@@ -38,4 +38,17 @@ export const phrases = {
     /\breview (?:issue|account|subscription)\b/i,
     /\bsecurity (?:alert|review)\b/i,
   ],
+  politicalKeywords: [
+    /\b(election|vote|ballot|primary|caucus)\b/i,
+    /\bcongress(?:ional)?\b/i,
+    /\bsenate\b/i,
+    /\bhouse of representatives\b/i,
+    /\b(\bdemocrat(ic)?\b|\brepublican\b)\b/i,
+    /\b(president|presidential|white house)\b/i,
+    /\btrump\b/i,
+    /\bbiden\b/i,
+    /\bPAC\b/i,
+    /\bcampaign\b/i,
+    /\brunoff\b/i,
+  ],
 };

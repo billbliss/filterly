@@ -18,12 +18,12 @@ const politicalSenderDomains = [
 
 export const politicalRuleset: RuleSet = {
   label: "PoliticalSolicitation",
-  threshold: 0.6,
+  threshold: 0.7,
   moveEnabled: true,
   rules: [
     {
       id: "political/from-domains",
-      weight: 0.45,
+      weight: 0.5,
       when: [{ op: "fromDomainIn", any: politicalSenderDomains }],
     },
     {
@@ -38,8 +38,15 @@ export const politicalRuleset: RuleSet = {
     },
     {
       id: "political/donation-language",
-      weight: 0.4,
+      weight: 0.2,
       when: [{ op: "textMatch", any: phrases.donate, scope: "both" }],
+    },
+    {
+      id: "political/keywords",
+      weight: 0.4,
+      when: [
+        { op: "textMatch", any: phrases.politicalKeywords, scope: "both" },
+      ],
     },
     {
       id: "political/paid-for-footer",
@@ -48,7 +55,7 @@ export const politicalRuleset: RuleSet = {
     },
     {
       id: "political/newsletterish",
-      weight: 0.2,
+      weight: 0.15,
       any: true,
       when: [
         { op: "flagTrue", key: "hasListId" },

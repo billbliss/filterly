@@ -65,6 +65,9 @@ function choosePrimary(results: Classified["results"]): string | "Unknown" {
     return pb - pa;
   });
 
+  const moveCandidate = sorted.find((r) => r.moveEnabled);
+  if (moveCandidate) return moveCandidate.label;
+
   // Highest confidence candidate
   const top = sorted[0];
 
