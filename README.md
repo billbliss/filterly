@@ -5,6 +5,7 @@ Filterly is a personal email triage tool that classifies Outlook/Exchange messag
 ## Highlights
 
 - **Rules-based classifier**: See `classification/` for rulesets covering finance, travel, marketing, political, phishing, etc. Each ruleset maps to a simplified folder taxonomy defined in `classification/folderMap.ts`.
+- **Per-ruleset move policy**: Only rulesets that set `moveEnabled: true` (for example, PoliticalSolicitation) are eligible for automatic folder moves. The global safety switch `MOVE_ENABLED=true` must be present in the environment for moves to execute; otherwise the workers stay read-only.
 - **Graph workers**:
   - `worker/pollLocal.ts` streams Inbox deltas and drives classification + auto-move for new mail.
   - `worker/retroClassify.ts` (invoked via `npm run retro`) sweeps historical Inbox messages with the latest logic.
