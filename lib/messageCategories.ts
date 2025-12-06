@@ -58,9 +58,10 @@ export function categoriesForClassification(
   classification: Classified,
 ): string[] {
   const categories: string[] = [];
-  if (classification.primaryFolder) {
-    categories.push(formatCategory(`Folder:${classification.primaryFolder}`));
-  }
+  // Stop adding a mostly redundant folder tag if it matches the primary label
+  // if (classification.primaryFolder) {
+  //   categories.push(formatCategory(`Folder:${classification.primaryFolder}`));
+  // }
   if (
     classification.primaryLabel &&
     classification.primaryLabel !== "Unknown"
