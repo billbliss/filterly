@@ -4,6 +4,7 @@ import { RuleSet } from "../types";
 
 export const phishingRuleset: RuleSet = {
   label: "PhishingSuspect",
+  moveEnabled: true,
   threshold: 0.7,
   rules: [
     {
@@ -48,6 +49,26 @@ export const phishingRuleset: RuleSet = {
         { op: "attachmentExtIn", any: ["ics"] },
         { op: "textMatch", any: phrases.office365Mention, scope: "both" },
         { op: "textMatch", any: phrases.office365Urgency, scope: "both" },
+      ],
+    },
+    {
+      id: "phish/docusign-spoof",
+      weight: 0.8,
+      when: [
+        { op: "textMatch", any: phrases.docuSignMention, scope: "both" },
+        {
+          op: "fromDomainNotIn",
+          none: [
+            "docusign.net",
+            "docusign.com",
+            ".docusign.net",
+            "docusignmail.net",
+            "linkedin.com",
+            ".linkedin.com",
+            "linkedinmail.com",
+            ".linkedinmail.com",
+          ],
+        },
       ],
     },
   ],

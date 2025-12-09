@@ -38,6 +38,9 @@ const DEFAULT_PRIORITY = 10;
 
 // If two labels are close in confidence, break ties with priority.
 const CLOSE_DELTA = 0.05;
+// Move-enabled labels (e.g., PhishingSuspect) only override higher-confidence
+// non-move labels when they are reasonably close in score.
+const MOVE_OVERRIDE_DELTA = 0.15;
 
 export interface Classified {
   primaryLabel: string;
@@ -65,11 +68,16 @@ function choosePrimary(results: Classified["results"]): string | "Unknown" {
     return pb - pa;
   });
 
-  const moveCandidate = sorted.find((r) => r.moveEnabled);
-  if (moveCandidate) return moveCandidate.label;
-
   // Highest confidence candidate
   const top = sorted[0];
+
+  const moveCandidate = sorted.find((r) => r.moveEnabled);
+  if (moveCandidate) {
+    const withinDelta =
+      moveCandidate === top ||
+      top.confidence - moveCandidate.confidence <= MOVE_OVERRIDE_DELTA;
+    if (withinDelta) return moveCandidate.label;
+  }
 
   // If top is auxiliary and there’s a close runner-up non-aux, pick the runner-up
   if (AUX_LABELS.has(top.label) && sorted.length > 1) {

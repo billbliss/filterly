@@ -24,6 +24,11 @@ export const phrases = {
   brandSpoof: [
     /\b(microsoft|apple|paypal|bank of america|chase|wells fargo)\b/i,
   ],
+  docuSignMention: [
+    /\bdocusign\b/i,
+    /\breview & sign\b/i,
+    /\bsign document\b/i,
+  ],
   office365Mention: [
     /\boffice ?365\b/i,
     /\bmicrosoft ?365\b/i,

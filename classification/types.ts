@@ -42,6 +42,7 @@ export type Operand =
   | { op: "attachmentExtIn"; any: string[] }
   | { op: "linkHostIn"; any: string[] }
   | { op: "fromDomainIn"; any: string[] }
+  | { op: "fromDomainNotIn"; none: string[] }
   | { op: "visibleHrefHostMismatch" } // compares link text host vs href host
   | { op: "regex"; field: keyof MessageFeatures; pattern: RegExp };
 

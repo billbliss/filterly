@@ -22,6 +22,11 @@ function textIncludes(hay: string, needle: string | RegExp): boolean {
 }
 
 function evalOperand(f: MessageFeatures, op: Operand): boolean {
+  const domainMatches = (domain: string, pattern: string) => {
+    const norm = pattern.toLowerCase();
+    if (norm.startsWith(".")) return domain.endsWith(norm);
+    return domain === norm;
+  };
   switch (op.op) {
     case "textMatch": {
       const scope = op.scope ?? "both";
@@ -69,7 +74,12 @@ function evalOperand(f: MessageFeatures, op: Operand): boolean {
     case "fromDomainIn": {
       const domain = f.fromDomain?.toLowerCase();
       if (!domain) return false;
-      return op.any.some((d) => domain === d.toLowerCase());
+      return op.any.some((d) => domainMatches(domain, d));
+    }
+    case "fromDomainNotIn": {
+      const domain = f.fromDomain?.toLowerCase();
+      if (!domain) return true;
+      return !op.none.some((d) => domainMatches(domain, d));
     }
     case "visibleHrefHostMismatch":
       return (f.links || []).some((l) => {
