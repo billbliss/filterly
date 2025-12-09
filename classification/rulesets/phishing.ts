@@ -2,6 +2,23 @@
 import { phrases } from "../predicates";
 import { RuleSet } from "../types";
 
+const microsoftAuthDomains = [
+  "microsoft.com",
+  ".microsoft.com",
+  "office.com",
+  ".office.com",
+  "outlook.com",
+  ".outlook.com",
+  "live.com",
+  ".live.com",
+  "sharepoint.com",
+  ".sharepoint.com",
+  "sharepointonline.com",
+  ".sharepointonline.com",
+  "microsoftonline.com",
+  ".microsoftonline.com",
+];
+
 export const phishingRuleset: RuleSet = {
   label: "PhishingSuspect",
   moveEnabled: true,
@@ -69,6 +86,15 @@ export const phishingRuleset: RuleSet = {
             ".linkedinmail.com",
           ],
         },
+      ],
+    },
+    {
+      id: "phish/m365-login-spoof",
+      weight: 0.85,
+      when: [
+        { op: "textMatch", any: phrases.office365Mention, scope: "both" },
+        { op: "textMatch", any: phrases.phishingUrgency, scope: "both" },
+        { op: "fromDomainNotIn", none: microsoftAuthDomains },
       ],
     },
   ],

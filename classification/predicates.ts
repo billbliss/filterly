@@ -20,6 +20,7 @@ export const phrases = {
     /\bunusual login\b/i,
     /\baccount (suspend|suspended)\b/i,
     /\bpayment overdue\b/i,
+    /\bmailbox (?:expires?|expiring|full|quota)\b/i,
   ],
   brandSpoof: [
     /\b(microsoft|apple|paypal|bank of america|chase|wells fargo)\b/i,
