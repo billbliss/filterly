@@ -16,6 +16,12 @@ interface MailFolder {
 
 const CATEGORY_PREFIX = process.env.CATEGORY_PREFIX || "Filterly";
 const FOLDER_TAG_PREFIX = `${CATEGORY_PREFIX}:Folder:`;
+const politicalPlatformHosts = new Set([
+  "secure.actblue.com",
+  "winred.com",
+  "mail.winred.com",
+]);
+const politicalFooterPattern = /\bpaid for by\b|\bFEC\b/i;
 
 type LogFn = (entry: unknown) => void;
 
@@ -156,6 +162,15 @@ export interface MisfiledMessageRecord {
   folderPath: string;
   categories: string[];
   classification?: ReturnType<typeof classify>;
+  featuresSummary?: {
+    fromDomain?: string;
+    hasListId?: boolean;
+    hasUnsubscribe?: boolean;
+    linkHosts?: string[];
+    hasPoliticalPlatformLink?: boolean;
+    hasPoliticalFooter?: boolean;
+    bodySample?: string;
+  };
 }
 
 export interface MisfiledFolderGroup {
@@ -236,6 +251,7 @@ export async function auditMisfiledMessages(options: AuditMisfiledOptions) {
         expectedNormalized
       ) {
         let classification: MisfiledMessageRecord["classification"];
+        let featuresSummary: MisfiledMessageRecord["featuresSummary"];
         if (includeClassification) {
           try {
             const full = await fetchMessageDetails(client, root, id);
@@ -243,6 +259,35 @@ export async function auditMisfiledMessages(options: AuditMisfiledOptions) {
               mailboxAddresses,
             });
             classification = classify(features);
+            const linkHosts = Array.from(
+              new Set(
+                (features.links || [])
+                  .map((link) => {
+                    try {
+                      return link.href ? new URL(link.href).hostname : "";
+                    } catch {
+                      return "";
+                    }
+                  })
+                  .filter(Boolean),
+              ),
+            );
+            const combinedText = `${features.subject || ""} ${
+              features.bodySample || ""
+            }`;
+            featuresSummary = {
+              fromDomain: features.fromDomain || undefined,
+              hasListId: features.hasListId || undefined,
+              hasUnsubscribe: features.hasUnsubscribe || undefined,
+              linkHosts: linkHosts.length ? linkHosts : undefined,
+              hasPoliticalPlatformLink: linkHosts.some((host) =>
+                politicalPlatformHosts.has(host),
+              ),
+              hasPoliticalFooter: politicalFooterPattern.test(combinedText),
+              bodySample: features.bodySample
+                ? features.bodySample.slice(0, 500)
+                : undefined,
+            };
           } catch (err) {
             log({
               event: "misfiled:error",
@@ -271,6 +316,7 @@ export async function auditMisfiledMessages(options: AuditMisfiledOptions) {
           folderPath,
           categories,
           classification,
+          featuresSummary,
         };
 
         folderBucket.total += 1;

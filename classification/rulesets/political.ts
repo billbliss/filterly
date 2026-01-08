@@ -28,7 +28,7 @@ export const politicalRuleset: RuleSet = {
     },
     {
       id: "political/platform-link",
-      weight: 0.45,
+      weight: 0.7,
       when: [
         {
           op: "linkHostIn",
@@ -50,7 +50,7 @@ export const politicalRuleset: RuleSet = {
     },
     {
       id: "political/paid-for-footer",
-      weight: 0.25,
+      weight: 0.7,
       when: [{ op: "textMatch", any: phrases.politicalFooter, scope: "both" }],
     },
     {
